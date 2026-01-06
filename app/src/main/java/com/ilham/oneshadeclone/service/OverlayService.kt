@@ -14,7 +14,6 @@ import android.os.IBinder
 import android.view.Gravity
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
-import com.ilham.oneshadeclone.R
 import com.ilham.oneshadeclone.ui.QuickSettingsPanel
 import com.ilham.oneshadeclone.ui.TriggerView
 
@@ -42,14 +41,19 @@ class OverlayService : Service() {
         setupTriggerView()
         setupPanelView()
         startForeground(1, createNotification())
-        registerReceiver(commandReceiver, IntentFilter(ACTION_CLOSE_PANEL), RECEIVER_NOT_EXPORTED)
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            registerReceiver(commandReceiver, IntentFilter(ACTION_CLOSE_PANEL), RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(commandReceiver, IntentFilter(ACTION_CLOSE_PANEL))
+        }
     }
 
     private fun setupTriggerView() {
         triggerView = TriggerView(this) { deltaY -> panelView.onExternalDrag(deltaY) }
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT, 60,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY else WindowManager.LayoutParams.TYPE_PHONE,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         )
@@ -61,7 +65,7 @@ class OverlayService : Service() {
         panelView = QuickSettingsPanel(this)
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY else WindowManager.LayoutParams.TYPE_PHONE,
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         )
@@ -82,8 +86,12 @@ class OverlayService : Service() {
     private fun createNotification(): Notification {
         val channel = NotificationChannel(CHANNEL_ID, "One Shade", NotificationManager.IMPORTANCE_LOW)
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        
+        // DISINI PERUBAHANNYA HAM: Pake icon sistem android, bukan icon hantu
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("One Shade Active").setSmallIcon(R.mipmap.ic_launcher).build()
+            .setContentTitle("One Shade Active")
+            .setSmallIcon(android.R.drawable.sym_def_app_icon) 
+            .build()
     }
 
     override fun onDestroy() {
