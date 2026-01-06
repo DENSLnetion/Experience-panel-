@@ -1,4 +1,4 @@
-name: One Shade Forensic Build
+name: One Shade Auto-Fix & Build
 
 on:
   push:
@@ -6,24 +6,33 @@ on:
   workflow_dispatch:
 
 jobs:
-  forensic_build:
+  fix_and_build:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # 1. BUKTIIN STRUKTUR FOLDER LU BENER
-    # Ini bakal nge-list semua file di log. Kalau salah taruh, ketauan disini.
-    - name: 📂 CEK FILE (WAJIB LIAT LOG INI)
+    # === INI BAGIAN GHAIBNYA ===
+    # Script ini bakal maksa benerin folder lu yang kurang dalem
+    - name: 🚑 AUTO-FIX FOLDER STRUCTURE
       run: |
-        echo "=== ROOT DIRECTORY ==="
-        ls -la
-        echo "=== APP DIRECTORY ==="
-        ls -la app/
-        echo "=== SRC STRUCTURE ==="
-        find app/src -maxdepth 4
-        echo "====================="
+        echo "Sedang memeriksa struktur folder..."
+        
+        # Bikin folder tujuan yang bener
+        mkdir -p app/src/main/java/com/ilham/oneshadeclone
+        
+        # Cek apakah ada file nyasar di folder 'ilham' dan pindahin paksa
+        if ls app/src/main/java/com/ilham/*.kt 1> /dev/null 2>&1; then
+          echo "Ditemukan file nyasar! Memindahkan ke kandang yang benar..."
+          mv app/src/main/java/com/ilham/*.kt app/src/main/java/com/ilham/oneshadeclone/
+        else
+          echo "Folder aman atau file sudah di tempat yang benar."
+        fi
+        
+        # Cek hasil perbaikan
+        echo "=== STRUKTUR FINAL ==="
+        find app/src/main/java -name "*.kt"
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -34,23 +43,19 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    # 2. PAKSA GENERATE GRADLE WRAPPER
-    # Karena lu ga punya gradlew di HP, kita bikin dulu
-    - name: Generate Gradle Wrapper
-      run: gradle wrapper --gradle-version 8.2
+    # Setup Gradle Manual (Bypass gradlew lu yang ga ada)
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: 8.5
 
-    - name: Make Gradlew Executable
-      run: chmod +x gradlew
-
-    # 3. BUILD DENGAN LOG MAXIMUM (INFO & STACKTRACE)
-    # --info: Kasih tau detail step by step
-    # --stacktrace: Kalau error, kasih tau baris berapa
-    - name: Build Debug APK (Verbose)
-      run: ./gradlew assembleDebug --no-daemon --stacktrace --info
+    - name: Build Debug APK
+      # Kita pake gradle langsung dari action, bukan wrapper repo lu
+      run: gradle assembleDebug --no-daemon --stacktrace
 
     - name: Upload APK
       if: success()
       uses: actions/upload-artifact@v4
       with:
-        name: OneShade-Debug
+        name: OneShade-Fixed-APK
         path: app/build/outputs/apk/debug/app-debug.apk
