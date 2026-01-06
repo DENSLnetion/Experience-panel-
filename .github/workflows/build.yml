@@ -1,4 +1,4 @@
-name: Build One Shade Clone
+name: One Shade Forensic Build
 
 on:
   push:
@@ -6,12 +6,24 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  forensic_build:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+
+    # 1. BUKTIIN STRUKTUR FOLDER LU BENER
+    # Ini bakal nge-list semua file di log. Kalau salah taruh, ketauan disini.
+    - name: 📂 CEK FILE (WAJIB LIAT LOG INI)
+      run: |
+        echo "=== ROOT DIRECTORY ==="
+        ls -la
+        echo "=== APP DIRECTORY ==="
+        ls -la app/
+        echo "=== SRC STRUCTURE ==="
+        find app/src -maxdepth 4
+        echo "====================="
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -22,19 +34,19 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    # INI KUNCINYA HAM: Kita paksa install Gradle 8.5
-    # Karena lu ga punya gradlew, kita pake action ini buat siapin environment
-    - name: Setup Gradle
-      uses: gradle/gradle-build-action@v2
-      with:
-        gradle-version: 8.5
+    # 2. PAKSA GENERATE GRADLE WRAPPER
+    # Karena lu ga punya gradlew di HP, kita bikin dulu
+    - name: Generate Gradle Wrapper
+      run: gradle wrapper --gradle-version 8.2
 
-    - name: Accept Android Licenses
-      run: yes | sdkmanager --licenses || true
+    - name: Make Gradlew Executable
+      run: chmod +x gradlew
 
-    - name: Build Debug APK
-      # Pake command 'gradle' langsung karena environment udah diset ke 8.5
-      run: gradle assembleDebug --stacktrace --no-daemon
+    # 3. BUILD DENGAN LOG MAXIMUM (INFO & STACKTRACE)
+    # --info: Kasih tau detail step by step
+    # --stacktrace: Kalau error, kasih tau baris berapa
+    - name: Build Debug APK (Verbose)
+      run: ./gradlew assembleDebug --no-daemon --stacktrace --info
 
     - name: Upload APK
       if: success()
