@@ -14,6 +14,7 @@ import android.os.IBinder
 import android.view.Gravity
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
+// import com.ilham.oneshadeclone.R  <-- INI PEMBUNUHNYA, KITA HAPUS
 import com.ilham.oneshadeclone.ui.QuickSettingsPanel
 import com.ilham.oneshadeclone.ui.TriggerView
 
@@ -87,7 +88,6 @@ class OverlayService : Service() {
         val channel = NotificationChannel(CHANNEL_ID, "One Shade", NotificationManager.IMPORTANCE_LOW)
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         
-        // DISINI PERUBAHANNYA HAM: Pake icon sistem android, bukan icon hantu
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("One Shade Active")
             .setSmallIcon(android.R.drawable.sym_def_app_icon) 
