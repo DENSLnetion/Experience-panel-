@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">One Shade Clone</string>
+    <string name="accessibility_description">One Shade Accessibility Service</string>
+</resources>
