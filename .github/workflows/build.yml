@@ -1,4 +1,4 @@
-name: One Shade Final Fix
+name: One Shade Manual Fix
 
 on:
   push:
@@ -6,30 +6,20 @@ on:
   workflow_dispatch:
 
 jobs:
-  final_fix_and_build:
+  build_manual:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # 1. AUTO-FIX FOLDER (Jaga-jaga kalo ada file nyasar lagi)
+    # JAGA-JAGA: Tetep jalanin fix folder biar aman
     - name: 🚑 AUTO-FIX FOLDER STRUCTURE
       run: |
         mkdir -p app/src/main/java/com/ilham/oneshadeclone
         if ls app/src/main/java/com/ilham/*.kt 1> /dev/null 2>&1; then
           mv app/src/main/java/com/ilham/*.kt app/src/main/java/com/ilham/oneshadeclone/
         fi
-
-    # 2. INI OBATNYA HAM! (FIX ANDROIDX ERROR)
-    # Kita bikin file gradle.properties secara gaib
-    - name: 🔧 FIX GRADLE PROPERTIES
-      run: |
-        echo "Sedang menyuntikkan konfigurasi AndroidX..."
-        echo "android.useAndroidX=true" > gradle.properties
-        echo "android.enableJetifier=true" >> gradle.properties
-        # Cek isinya biar yakin
-        cat gradle.properties
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -45,6 +35,10 @@ jobs:
       with:
         gradle-version: 8.5
 
+    # DEBUG: Cek apakah gradle.properties kebaca
+    - name: Cek Config
+      run: cat gradle.properties || echo "gradle.properties GAK KETEMU!"
+
     - name: Build Debug APK
       run: gradle assembleDebug --no-daemon --stacktrace
 
@@ -52,5 +46,5 @@ jobs:
       if: success()
       uses: actions/upload-artifact@v4
       with:
-        name: OneShade-Final-APK
+        name: OneShade-APK-Final
         path: app/build/outputs/apk/debug/app-debug.apk
